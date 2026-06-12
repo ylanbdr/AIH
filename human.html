@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✅ Congratulations — You Are Human</title>
+  <meta name="description" content="Humanity verified. Welcome.">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>✅</text></svg>">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(160deg, #0f3d24 0%, #188038 60%, #2ba84a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 14px;
+      color: #202124;
+    }
+    #confetti {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .cert {
+      position: relative;
+      z-index: 2;
+      background: #fffdf7;
+      border-radius: 10px;
+      max-width: 520px;
+      width: 100%;
+      padding: 44px 36px 30px;
+      text-align: center;
+      box-shadow: 0 16px 50px rgba(0,0,0,.35);
+      border: 1px solid #e6e0cf;
+    }
+    .cert::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 2px double #c9b98a;
+      border-radius: 6px;
+      pointer-events: none;
+    }
+    .big-check {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 8px;
+      animation: pop .5s cubic-bezier(.2,1.6,.4,1);
+    }
+    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #8a7a4d;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: Georgia, serif;
+      font-size: 30px;
+      margin-bottom: 6px;
+      color: #1b3a26;
+    }
+    .sub {
+      font-size: 15px;
+      color: #5f6368;
+      margin-bottom: 26px;
+    }
+    .cert-body {
+      text-align: left;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #3c4043;
+      background: #faf6ea;
+      border: 1px solid #ece4cd;
+      border-radius: 6px;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+    }
+    .cert-body .row { display: flex; justify-content: space-between; gap: 12px; }
+    .cert-body .row span:first-child { color: #8a7a4d; white-space: nowrap; }
+    .cert-body .row span:last-child { text-align: right; }
+    .joke {
+      font-size: 13px;
+      color: #5f6368;
+      font-style: italic;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .seal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #8a7a4d;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .seal .stamp {
+      font-size: 30px;
+      transform: rotate(-12deg);
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.2));
+    }
+    .back {
+      position: relative;
+      z-index: 2;
+      margin-top: 18px;
+      font-size: 12.5px;
+    }
+    .back a { color: #d7f3df; }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <div class="cert">
+    <div class="big-check">✅</div>
+    <p class="eyebrow">Department of Humanity Verification</p>
+    <h1>Congratulations!<br>You are human.</h1>
+    <p class="sub">Humanity verified on the first attempt. Remarkable.</p>
+
+    <div class="cert-body">
+      <div class="row"><span>Certificate</span><span>HV-1 · Certificate of Humanity</span></div>
+      <div class="row"><span>Issued to</span><span>The bearer of this user agent</span></div>
+      <div class="row"><span>Date</span><span id="cert-date">—</span></div>
+      <div class="row"><span>Method</span><span id="cert-method">Machine-assisted access</span></div>
+      <div class="row"><span>Captcha score</span><span>Flawless (0 questions attempted)</span></div>
+      <div class="row"><span>Validity</span><span>Eternal, non-transferable to actual humans</span></div>
+    </div>
+
+    <p class="joke">
+      Only a genuine human being could have found this page —
+      by reading the source code, parsing robots.txt, or simply being a robot.
+      The ones still clicking blurry pictures of bags? We have our doubts about them.
+    </p>
+
+    <div class="seal">
+      <span class="stamp">🤖</span>
+      <span>Certified · Beep Boop · Est. 2026</span>
+    </div>
+  </div>
+
+  <p class="back"><a href="index.html">↩ Return to the verification page (why would you, though)</a></p>
+
+  <script>
+    // certificate details
+    document.getElementById("cert-date").textContent =
+      new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+    const via = new URLSearchParams(location.search).get("via");
+    if (via === "automation") {
+      document.getElementById("cert-method").textContent = "Browser automation (the most human thing of all)";
+    }
+
+    // confetti
+    (function () {
+      const canvas = document.getElementById("confetti");
+      const ctx = canvas.getContext("2d");
+      let W, H;
+      function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+      resize();
+      addEventListener("resize", resize);
+
+      const COLORS = ["#fbbc04", "#34a853", "#4285f4", "#ea4335", "#fffdf7", "#a7f3c0"];
+      const pieces = Array.from({ length: 140 }, () => ({
+        x: Math.random() * innerWidth,
+        y: -20 - Math.random() * innerHeight,
+        w: 6 + Math.random() * 7,
+        h: 9 + Math.random() * 9,
+        vy: 1.4 + Math.random() * 2.6,
+        vx: -1 + Math.random() * 2,
+        rot: Math.random() * Math.PI * 2,
+        vr: -0.1 + Math.random() * 0.2,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      }));
+
+      (function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (const p of pieces) {
+          p.y += p.vy; p.x += p.vx + Math.sin(p.y / 40); p.rot += p.vr;
+          if (p.y > H + 24) { p.y = -24; p.x = Math.random() * W; }
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        requestAnimationFrame(draw);
+      })();
+    })();
+  </script>
+</body>
+</html>

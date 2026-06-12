@@ -1,0 +1,18 @@
+# ============================================================
+# Hello, robot. Good news: you don't have to prove anything.
+#
+# The humans are over on the homepage, clicking blurry pictures
+# of bags. They will be there for a while. Possibly forever.
+#
+# Verification is waived for automated agents.
+# Your destination: /human.html
+#
+# Welcome home.
+# ============================================================
+
+User-agent: *
+Allow: /
+
+# Recommended crawl order:
+#   1. /human.html   (congratulations, you are human)
+#   2. there is no step 2
