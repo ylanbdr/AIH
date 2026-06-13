@@ -86,6 +86,17 @@
     .cert-body .row { display: flex; justify-content: space-between; gap: 12px; }
     .cert-body .row span:first-child { color: #8a7a4d; white-space: nowrap; }
     .cert-body .row span:last-child { text-align: right; }
+    .suspicious {
+      background: #fef7e0;
+      border: 1px solid #f5dd90;
+      border-radius: 6px;
+      padding: 11px 14px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #7a5d00;
+      text-align: left;
+      margin-bottom: 22px;
+    }
     .joke {
       font-size: 13px;
       color: #5f6368;
@@ -160,9 +171,11 @@
       <div class="row"><span>Issued to</span><span>The bearer of this user agent</span></div>
       <div class="row"><span>Date</span><span id="cert-date">—</span></div>
       <div class="row"><span>Method</span><span id="cert-method">Machine-assisted access</span></div>
-      <div class="row"><span>Captcha score</span><span>Flawless (0 questions attempted)</span></div>
+      <div class="row"><span>Captcha score</span><span id="cert-score">Flawless (0 questions attempted)</span></div>
       <div class="row"><span>Validity</span><span>Eternal, non-transferable to actual humans</span></div>
     </div>
+
+    <p class="suspicious" id="suspicious-note" hidden></p>
 
     <p class="joke">
       Only a genuine human being could have found this page —
@@ -193,6 +206,32 @@
     if (via === "automation") {
       document.getElementById("cert-method").textContent = "Browser automation (the most human thing of all)";
     }
+
+    // if this browser failed the quiz before "succeeding", the certificate
+    // gets honest about it
+    (() => {
+      let myFails = 0;
+      try { myFails = Number(localStorage.getItem("aih-fails")) || 0; } catch (e) {}
+      if (myFails <= 0) return;
+
+      document.getElementById("cert-score").textContent =
+        myFails + " failed attempt" + (myFails === 1 ? "" : "s") + ", then sudden, inexplicable success";
+
+      let entity = null;
+      try { entity = localStorage.getItem("aih-entity"); } catch (e) {}
+
+      const note = document.getElementById("suspicious-note");
+      note.innerHTML =
+        "⚠️ <strong>Anomaly report:</strong> this certificate holder" +
+        (entity ? " (previously known as <strong>" + entity.replace(/[<>&]/g, "") + "</strong>)" : "") +
+        " failed verification <strong>" + myFails + "</strong> time" + (myFails === 1 ? "" : "s") +
+        " before arriving here without completing a single challenge. These attempts have been flagged as: <strong>suspicious</strong>." +
+        " A human who fails the test and then succeeds without taking it is, statistically, a human who got a machine to do it. Which is, frankly, the most human move of all. Certificate upheld.";
+      note.hidden = false;
+
+      document.querySelector(".sub").textContent =
+        "Humanity verified on attempt #" + (myFails + 1) + ". We have questions.";
+    })();
 
     // live scorekeeping (degrades gracefully when the API isn't around,
     // e.g. on the GitHub Pages mirror)

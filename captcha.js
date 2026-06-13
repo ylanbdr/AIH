@@ -48,6 +48,11 @@
   }
 
   function reportFail() {
+    // remember this browser's lifetime failure count, so the certificate
+    // page can raise an eyebrow if they ever get there
+    try {
+      localStorage.setItem("aih-fails", String((Number(localStorage.getItem("aih-fails")) || 0) + 1));
+    } catch (e) {}
     fetch(API_BASE + "/api/fail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
