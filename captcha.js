@@ -98,26 +98,28 @@
   const SEPIA_TONES = ["#8a7a5c", "#7d6b54", "#94846a", "#6e5f4b", "#a08e70", "#5c5247"];
 
   function distortedTileSVG(emoji, opts = {}) {
+    // Goal: recognizable-but-frustrating, like a real low-quality captcha
+    // crop — NOT pure noise. Keep displacement gentle so the object survives.
     const seed = rand(9999);
-    const freq = (0.012 + Math.random() * 0.05).toFixed(3);
-    const scale = opts.heavy ? 55 + rand(50) : 25 + rand(30);
+    const freq = (0.012 + Math.random() * 0.02).toFixed(3);
+    const scale = opts.heavy ? 14 + rand(12) : 8 + rand(8);
     const bg = pick(SEPIA_TONES);
-    const size = opts.small ? 38 + rand(22) : 58 + rand(30);
-    const x = 18 + rand(34);
-    const y = 55 + rand(30);
-    const rot = rand(50) - 25;
-    const blur = (Math.random() * 1.4).toFixed(2);
+    const size = opts.small ? 46 + rand(18) : 60 + rand(24);
+    const x = 22 + rand(20);
+    const y = 64 + rand(14);
+    const rot = rand(24) - 12;
+    const blur = (Math.random() * 0.6).toFixed(2);
     return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
   <defs>
     <filter id="f${seed}" x="-30%" y="-30%" width="160%" height="160%">
-      <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="3" seed="${seed}" result="n"/>
+      <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="n"/>
       <feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}"/>
       <feGaussianBlur stdDeviation="${blur}"/>
     </filter>
     <filter id="g${seed}">
-      <feTurbulence type="turbulence" baseFrequency="0.9" numOctaves="2" seed="${seed + 1}"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.28  0 0 0 0.55 0"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="${seed + 1}"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.28  0 0 0 0.5 0"/>
       <feComposite operator="over" in2="SourceGraphic"/>
     </filter>
   </defs>
@@ -125,7 +127,7 @@
   <g filter="url(#f${seed})">
     <text x="${x}" y="${y}" font-size="${size}" transform="rotate(${rot} 50 50)">${emoji}</text>
   </g>
-  <rect width="100" height="100" filter="url(#g${seed})" opacity="0.6"/>
+  <rect width="100" height="100" filter="url(#g${seed})" opacity="0.22"/>
 </svg>`;
   }
 
@@ -194,8 +196,8 @@
       body.innerHTML = "";
       const grid = document.createElement("div");
       grid.className = "grid g9";
-      // sometimes include zero actual targets, because comedy
-      const targetCount = Math.random() < 0.35 ? 0 : 2 + rand(3);
+      // always a few plausible targets, so it feels like a real (hard) test
+      const targetCount = 2 + rand(3);
       const cells = [];
       for (let i = 0; i < 9; i++) {
         cells.push(i < targetCount ? pick(cat.emojis) : pick(DECOYS));
@@ -225,10 +227,11 @@
       return { type: "grid" };
     },
 
-    // illegible distorted text
+    // distorted text — warped and wavy, but the characters are readable.
+    // (You can read it. You will still fail. That is the whole bit.)
     function distortedText() {
       setHeader("Type the characters", "you see below", "Case sensitive. Whitespace sensitive. Emotion sensitive.");
-      const chars = Array.from({ length: 7 }, () =>
+      const chars = Array.from({ length: 6 }, () =>
         pick("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789".split(""))
       ).join("");
       const seed = rand(9999);
@@ -236,17 +239,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 90" width="100%">
   <defs>
     <filter id="t${seed}">
-      <feTurbulence type="turbulence" baseFrequency="0.035 0.12" numOctaves="3" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="38"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.045" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="9"/>
     </filter>
   </defs>
   <g filter="url(#t${seed})">
     ${chars.split("").map((c, i) =>
-      `<text x="${22 + i * 38 + rand(10)}" y="${52 + rand(26) - 13}" font-size="${30 + rand(18)}"
-        font-family="Georgia" transform="rotate(${rand(70) - 35} ${30 + i * 38} 50)"
-        fill="#4a4036" opacity="0.85">${c}</text>`).join("")}
-    <line x1="0" y1="${30 + rand(40)}" x2="300" y2="${30 + rand(40)}" stroke="#4a4036" stroke-width="3" opacity="0.6"/>
-    <line x1="0" y1="${30 + rand(40)}" x2="300" y2="${30 + rand(40)}" stroke="#4a4036" stroke-width="2" opacity="0.6"/>
+      `<text x="${28 + i * 42}" y="${56 + rand(10) - 5}" font-size="${40 + rand(8)}"
+        font-family="Georgia, serif" font-weight="bold"
+        transform="rotate(${rand(30) - 15} ${40 + i * 42} 48)"
+        fill="#3a322a">${c}</text>`).join("")}
+    <path d="M0 ${40 + rand(16)} Q 75 ${30 + rand(30)} 150 ${42 + rand(16)} T 300 ${40 + rand(16)}"
+      stroke="#3a322a" stroke-width="2" fill="none" opacity="0.5"/>
   </g>
 </svg>`;
       const body = $("challenge-body");
@@ -254,26 +258,35 @@
         <div class="text-challenge">
           <div class="distort-box">${svg}</div>
           <input class="text-input" id="text-answer" type="text" autocomplete="off" spellcheck="false" placeholder="Enter the characters">
-          <p class="challenge-note">Hint: some of these characters may not exist.</p>
+          <p class="challenge-note">Hint: case matters. So does your definition of "see".</p>
         </div>`;
       return { type: "text" };
     },
 
-    // count the things
+    // count the things — distinct, countable items (you can count them;
+    // the answer is still wrong, because the answer is always wrong)
     function countThings() {
       const cat = pick(CATEGORIES);
       setHeader("How many", cat.name + " do you see?", "Count carefully. Then count again. Get a different number.");
       const n = 4 + rand(5);
       const seed = rand(9999);
-      const items = Array.from({ length: n }, () => `
-        <text x="${rand(240)}" y="${30 + rand(120)}" font-size="${24 + rand(26)}"
-          transform="rotate(${rand(360)} 130 80)" opacity="${0.35 + Math.random() * 0.55}">${pick(cat.emojis)}</text>`).join("");
+      // lay items on a loose grid so they don't pile into one blob
+      const slots = [];
+      for (let r = 0; r < 2; r++) for (let cIdx = 0; cIdx < 4; cIdx++) slots.push([cIdx, r]);
+      slots.sort(() => Math.random() - 0.5);
+      const items = Array.from({ length: n }, (_, i) => {
+        const [sx, sy] = slots[i % slots.length];
+        const px = 24 + sx * 64 + rand(16);
+        const py = 50 + sy * 70 + rand(14);
+        return `<text x="${px}" y="${py}" font-size="${30 + rand(8)}"
+          transform="rotate(${rand(36) - 18} ${px} ${py})" opacity="0.92">${pick(cat.emojis)}</text>`;
+      }).join("");
       const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 160" width="100%">
   <defs>
     <filter id="c${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="45"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="10"/>
     </filter>
   </defs>
   <rect width="280" height="160" fill="${pick(SEPIA_TONES)}"/>
@@ -287,36 +300,6 @@
           <p class="challenge-note">Partial ${cat.name} count as 0.7 of a whole.</p>
         </div>`;
       return { type: "count" };
-    },
-
-    // odd one out (they are all identical)
-    function oddOneOut() {
-      setHeader("Select the image that", "does not belong", "Exactly one image is different. Trust us.");
-      const emoji = pick(DECOYS);
-      const seed = rand(9999);
-      const svg = distortedTileSVG(emoji);
-      const body = $("challenge-body");
-      body.innerHTML = "";
-      const grid = document.createElement("div");
-      grid.className = "grid g9";
-      for (let i = 0; i < 9; i++) {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        const img = svgToImg(svg); // the SAME image, nine times
-        tile.appendChild(img);
-        const tick = document.createElement("div");
-        tick.className = "tick";
-        tick.textContent = "✓";
-        tile.appendChild(tick);
-        tile.addEventListener("click", () => {
-          grid.querySelectorAll(".tile").forEach((t) => t.classList.remove("selected"));
-          tile.classList.add("selected");
-        });
-        grid.appendChild(tile);
-      }
-      body.appendChild(grid);
-      void seed;
-      return { type: "grid" };
     },
   ];
 
