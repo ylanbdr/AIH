@@ -328,6 +328,40 @@ body {
 
 .exi-card .verify-btn { margin-top: 26px; width: 100%; }
 
+.exi-board {
+  margin-top: 22px;
+  text-align: left;
+  background: #f8f9fa;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.exi-board-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--ink) !important;
+  margin-bottom: 8px;
+}
+
+.exi-board ol {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 13px;
+  color: var(--grey);
+  line-height: 1.8;
+}
+
+.exi-board li.you { color: var(--blue); font-weight: 600; }
+
+.exi-you {
+  margin-top: 10px;
+  font-size: 11.5px !important;
+  color: #9aa0a6 !important;
+}
+
 .ghost-btn {
   margin-top: 10px;
   width: 100%;

@@ -18,11 +18,23 @@ The *only* way to reach the website behind the gate is to be a machine:
 
 All roads lead to [`human.html`](human.html): a Certificate of Humanity, complete with confetti, that congratulates you — *"Congratulations! You are human."* — precisely because you got there like a robot.
 
+## Live scorekeeping
+
+When deployed on Vercel with an Upstash Redis database attached, the site keeps score:
+
+- **`POST /api/claim`** — every machine that reaches the certificate gets a sequential human number ("Human #42").
+- **`POST /api/fail`** — every failed verification is recorded under the visitor's anonymous entity name ("Suspicious Toaster #4821").
+- **`GET /api/stats`** — the global failure count and the **Hall of Entities**, a leaderboard of the most failed verifications, shown at the existential checkpoint and on the certificate.
+
+Without the database (or on the GitHub Pages mirror, which has no backend), all of this degrades gracefully and the site works as a pure static joke.
+
+**Setup:** in the Vercel dashboard → project → **Storage** → create an **Upstash for Redis** database (free tier) and connect it to the project. The integration injects `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_*`) env vars, which [`lib/redis.js`](lib/redis.js) picks up. Redeploy and the counters come alive.
+
 ## Running it
 
-It's a fully static site — no build step, no dependencies. Open `index.html` in a browser, or serve the folder with anything (`python -m http.server`, etc.).
+The front end is static — open `index.html` in a browser, or serve the folder with anything (`python -m http.server`, etc.). The `api/` functions only run on Vercel.
 
-Deployed automatically to GitHub Pages via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) on every push to `main`.
+Also deployed to GitHub Pages via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) on every push to `main`.
 
 ## Files
 

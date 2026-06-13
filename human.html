@@ -114,6 +114,35 @@
       font-size: 12.5px;
     }
     .back a { color: #d7f3df; }
+    .meanwhile {
+      margin-top: 24px;
+      text-align: left;
+      background: #f3efe2;
+      border: 1px solid #e6dec6;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .meanwhile-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #8a7a4d;
+      margin-bottom: 8px;
+    }
+    .meanwhile ol {
+      margin: 0;
+      padding-left: 22px;
+      font-size: 13px;
+      color: #5f6368;
+      line-height: 1.8;
+    }
+    .meanwhile-foot {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #9aa0a6;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -127,6 +156,7 @@
 
     <div class="cert-body">
       <div class="row"><span>Certificate</span><span>HV-1 · Certificate of Humanity</span></div>
+      <div class="row"><span>Human No.</span><span id="cert-number">unnumbered (counter offline)</span></div>
       <div class="row"><span>Issued to</span><span>The bearer of this user agent</span></div>
       <div class="row"><span>Date</span><span id="cert-date">—</span></div>
       <div class="row"><span>Method</span><span id="cert-method">Machine-assisted access</span></div>
@@ -144,6 +174,12 @@
       <span class="stamp">🤖</span>
       <span>Certified · Beep Boop · Est. 2026</span>
     </div>
+
+    <div class="meanwhile" id="meanwhile" hidden>
+      <p class="meanwhile-title">Meanwhile, still proving their humanity:</p>
+      <ol id="fail-board"></ol>
+      <p class="meanwhile-foot" id="meanwhile-foot"></p>
+    </div>
   </div>
 
   <p class="back"><a href="index.html">↩ Return to the verification page (why would you, though)</a></p>
@@ -157,6 +193,49 @@
     if (via === "automation") {
       document.getElementById("cert-method").textContent = "Browser automation (the most human thing of all)";
     }
+
+    // live scorekeeping (degrades gracefully when the API isn't around,
+    // e.g. on the GitHub Pages mirror)
+    const API_BASE = ""; // same origin
+    (async () => {
+      try {
+        let count = null;
+        let claimed = null;
+        try { claimed = localStorage.getItem("aih-claimed"); } catch (e) {}
+
+        if (!claimed) {
+          const res = await fetch(API_BASE + "/api/claim", { method: "POST" });
+          if (res.ok) {
+            count = (await res.json()).count;
+            if (count) { try { localStorage.setItem("aih-claimed", String(count)); } catch (e) {} }
+          }
+        } else {
+          count = Number(claimed) || null;
+        }
+
+        const statsRes = await fetch(API_BASE + "/api/stats");
+        if (!statsRes.ok) throw new Error("no stats");
+        const stats = await statsRes.json();
+
+        if (!count && stats.claims) count = stats.claims;
+        if (count) {
+          document.getElementById("cert-number").textContent =
+            "#" + Number(count).toLocaleString() + " (verified in order of machinehood)";
+        }
+
+        if (stats.leaderboard && stats.leaderboard.length > 0) {
+          const list = document.getElementById("fail-board");
+          stats.leaderboard.slice(0, 5).forEach((row) => {
+            const li = document.createElement("li");
+            li.textContent = row.name + " — " + row.fails + " failed attempt" + (row.fails === 1 ? "" : "s");
+            list.appendChild(li);
+          });
+          document.getElementById("meanwhile-foot").textContent =
+            stats.totalFails.toLocaleString() + " humanity verification failures recorded to date. They keep trying. It's almost human of them.";
+          document.getElementById("meanwhile").hidden = false;
+        }
+      } catch (e) { /* no API, no numbers, no problem */ }
+    })();
 
     // confetti
     (function () {

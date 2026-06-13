@@ -31,6 +31,48 @@
   let currentChallenge = null;
   let existentialShown = 0;
 
+  // ---------- scorekeeping (Vercel API; degrades gracefully without it) ----------
+  const API_BASE = ""; // same origin
+
+  const ENTITY_ADJ = ["Suspicious", "Blurry", "Probable", "Unverified", "Wobbly", "Anxious", "Defective", "Almost", "Allegedly Human", "Recalled", "Off-Brand", "Damp"];
+  const ENTITY_NOUN = ["Toaster", "Roomba", "Mannequin", "Scarecrow", "Houseplant", "Printer", "Captcha Enjoyer", "Lamp", "Microwave", "Specimen", "Entity", "Dishwasher"];
+
+  function entityName() {
+    let name = null;
+    try { name = localStorage.getItem("aih-entity"); } catch (e) {}
+    if (!name) {
+      name = ENTITY_ADJ[rand(ENTITY_ADJ.length)] + " " + ENTITY_NOUN[rand(ENTITY_NOUN.length)] + " #" + (1000 + rand(9000));
+      try { localStorage.setItem("aih-entity", name); } catch (e) {}
+    }
+    return name;
+  }
+
+  function reportFail() {
+    fetch(API_BASE + "/api/fail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: entityName() }),
+    }).catch(() => {});
+  }
+
+  async function fetchStats() {
+    try {
+      const res = await fetch(API_BASE + "/api/stats");
+      if (!res.ok) return null;
+      const d = await res.json();
+      return typeof d.totalFails === "number" ? d : null;
+    } catch (e) { return null; }
+  }
+
+  function updateWorldFailCount() {
+    fetchStats().then((d) => {
+      if (d && d.totalFails > 0) {
+        document.querySelector(".human-rate").textContent =
+          "Humans pass this 99.9% of the time · " + d.totalFails.toLocaleString() + " failures recorded so far";
+      }
+    });
+  }
+
   // ---------- elements ----------
   const $ = (id) => document.getElementById(id);
   const stages = {
@@ -336,10 +378,34 @@
       existentialShown++;
       $("exi-text").innerHTML = line.text.replace("{n}", "<strong>" + fails + "</strong>");
       $("exi-sub").textContent = line.sub;
+      renderLeaderboard();
       showStage("existential");
       return true;
     }
     return false;
+  }
+
+  function renderLeaderboard() {
+    const board = $("exi-board");
+    const list = $("exi-leaderboard");
+    board.hidden = true;
+    fetchStats().then((d) => {
+      if (!d || !d.leaderboard || d.leaderboard.length === 0) return;
+      const me = entityName();
+      list.innerHTML = "";
+      d.leaderboard.slice(0, 5).forEach((row) => {
+        const li = document.createElement("li");
+        li.textContent = row.name + " — " + row.fails + " failed attempt" + (row.fails === 1 ? "" : "s");
+        if (row.name === me) {
+          li.classList.add("you");
+          li.textContent += " (this is you)";
+        }
+        list.appendChild(li);
+      });
+      $("exi-you").textContent =
+        "You are competing as: " + me + ". Your parents must be proud. If you have parents. Do you?";
+      board.hidden = false;
+    });
   }
 
   // ---------- wiring ----------
@@ -352,6 +418,7 @@
       checkbox.classList.remove("spinning");
       showStage("challenge");
       newChallenge();
+      updateWorldFailCount();
     }, 1700);
   }
   checkbox.addEventListener("click", startVerification);
@@ -368,6 +435,7 @@
       btn.disabled = false;
       btn.textContent = "VERIFY";
       fails++;
+      reportFail();
       if (maybeExistential()) return;
       showFail();
       newChallenge();
