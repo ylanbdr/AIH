@@ -377,8 +377,8 @@
   ];
 
   function maybeExistential() {
-    // every 6 fails, pause for reflection
-    if (fails > 0 && fails % 6 === 0) {
+    // every 4 fails, pause for reflection
+    if (fails > 0 && fails % 4 === 0) {
       const line = EXI_LINES[Math.min(existentialShown, EXI_LINES.length - 1)];
       existentialShown++;
       $("exi-text").innerHTML = line.text.replace("{n}", "<strong>" + fails + "</strong>");
