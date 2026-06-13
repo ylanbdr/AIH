@@ -101,14 +101,16 @@
     // Goal: recognizable-but-frustrating, like a real low-quality captcha
     // crop — NOT pure noise. Keep displacement gentle so the object survives.
     const seed = rand(9999);
-    const freq = (0.012 + Math.random() * 0.025).toFixed(3);
-    const scale = opts.heavy ? 26 + rand(10) : 18 + rand(8);
+    // Strong, melty distortion — the object is still in there and your brain
+    // keeps insisting it can almost name it, but you can never be sure.
+    const freq = (0.012 + Math.random() * 0.04).toFixed(3);
+    const scale = opts.heavy ? 46 + rand(18) : 32 + rand(12);
     const bg = pick(SEPIA_TONES);
-    const size = opts.small ? 46 + rand(18) : 60 + rand(24);
-    const x = 22 + rand(20);
-    const y = 64 + rand(14);
-    const rot = rand(30) - 15;
-    const blur = (Math.random() * 0.9).toFixed(2);
+    const size = opts.small ? 48 + rand(20) : 62 + rand(26);
+    const x = 20 + rand(24);
+    const y = 62 + rand(18);
+    const rot = rand(40) - 20;
+    const blur = (Math.random() * 1.1).toFixed(2);
     return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
   <defs>
@@ -127,7 +129,7 @@
   <g filter="url(#f${seed})">
     <text x="${x}" y="${y}" font-size="${size}" transform="rotate(${rot} 50 50)">${emoji}</text>
   </g>
-  <rect width="100" height="100" filter="url(#g${seed})" opacity="0.22"/>
+  <rect width="100" height="100" filter="url(#g${seed})" opacity="0.42"/>
 </svg>`;
   }
 
@@ -226,8 +228,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 90" width="100%">
   <defs>
     <filter id="t${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.045" numOctaves="2" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="9"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.05" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="22"/>
     </filter>
   </defs>
   <g filter="url(#t${seed})">
@@ -272,8 +274,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 160" width="100%">
   <defs>
     <filter id="c${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="10"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="24"/>
     </filter>
   </defs>
   <rect width="280" height="160" fill="${pick(SEPIA_TONES)}"/>
