@@ -101,14 +101,14 @@
     // Goal: recognizable-but-frustrating, like a real low-quality captcha
     // crop — NOT pure noise. Keep displacement gentle so the object survives.
     const seed = rand(9999);
-    const freq = (0.012 + Math.random() * 0.02).toFixed(3);
-    const scale = opts.heavy ? 14 + rand(12) : 8 + rand(8);
+    const freq = (0.012 + Math.random() * 0.025).toFixed(3);
+    const scale = opts.heavy ? 26 + rand(10) : 18 + rand(8);
     const bg = pick(SEPIA_TONES);
     const size = opts.small ? 46 + rand(18) : 60 + rand(24);
     const x = 22 + rand(20);
     const y = 64 + rand(14);
-    const rot = rand(24) - 12;
-    const blur = (Math.random() * 0.6).toFixed(2);
+    const rot = rand(30) - 15;
+    const blur = (Math.random() * 0.9).toFixed(2);
     return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
   <defs>
@@ -163,19 +163,6 @@
     tile.appendChild(tick);
     tile.addEventListener("click", () => {
       tile.classList.toggle("selected");
-      // classic captcha cruelty: sometimes the image you clicked
-      // quietly becomes a different image
-      if (Math.random() < 0.3) {
-        setTimeout(() => {
-          tile.classList.add("fading");
-          setTimeout(() => {
-            const fresh = pick(Math.random() < 0.5 ? DECOYS : pick(CATEGORIES).emojis);
-            tile.querySelector("img").src =
-              "data:image/svg+xml," + encodeURIComponent(distortedTileSVG(fresh, opts));
-            tile.classList.remove("fading");
-          }, 280);
-        }, 350);
-      }
     });
     return tile;
   }
