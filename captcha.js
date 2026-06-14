@@ -228,8 +228,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 90" width="100%">
   <defs>
     <filter id="t${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.05" numOctaves="2" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="22"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.022 0.055" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="28"/>
     </filter>
   </defs>
   <g filter="url(#t${seed})">
@@ -257,25 +257,22 @@
     function countThings() {
       const cat = pick(CATEGORIES);
       setHeader("How many", cat.name + " do you see?", "Count carefully. Then count again. Get a different number.");
-      const n = 4 + rand(5);
+      const n = 9 + rand(7);
       const seed = rand(9999);
-      // lay items on a loose grid so they don't pile into one blob
-      const slots = [];
-      for (let r = 0; r < 2; r++) for (let cIdx = 0; cIdx < 4; cIdx++) slots.push([cIdx, r]);
-      slots.sort(() => Math.random() - 0.5);
-      const items = Array.from({ length: n }, (_, i) => {
-        const [sx, sy] = slots[i % slots.length];
-        const px = 24 + sx * 64 + rand(16);
-        const py = 50 + sy * 70 + rand(14);
-        return `<text x="${px}" y="${py}" font-size="${30 + rand(8)}"
-          transform="rotate(${rand(36) - 18} ${px} ${py})" opacity="0.92">${pick(cat.emojis)}</text>`;
+      // pack lots of items into the middle so they cluster and overlap, then
+      // melt them with high-frequency displacement — genuinely uncountable
+      const items = Array.from({ length: n }, () => {
+        const px = 36 + rand(196);
+        const py = 48 + rand(80);
+        return `<text x="${px}" y="${py}" font-size="${28 + rand(16)}"
+          transform="rotate(${rand(80) - 40} ${px} ${py})" opacity="${(0.55 + Math.random() * 0.4).toFixed(2)}">${pick(cat.emojis)}</text>`;
       }).join("");
       const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 160" width="100%">
   <defs>
     <filter id="c${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="24"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.045 0.06" numOctaves="3" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="40"/>
     </filter>
   </defs>
   <rect width="280" height="160" fill="${pick(SEPIA_TONES)}"/>
