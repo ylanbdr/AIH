@@ -84,11 +84,12 @@
     gate: $("stage-gate"),
     challenge: $("stage-challenge"),
     existential: $("stage-existential"),
+    timeout: $("stage-timeout"),
   };
 
   function showStage(name) {
-    Object.values(stages).forEach((s) => s.classList.remove("active"));
-    stages[name].classList.add("active");
+    Object.values(stages).forEach((s) => { if (s) s.classList.remove("active"); });
+    if (stages[name]) stages[name].classList.add("active");
   }
 
   // ---------- fake distorted images (SVG noise over emoji) ----------
@@ -382,6 +383,52 @@
     });
   }
 
+  // ---------- the 60-second lockout (after every 3 attempts) ----------
+  let timeoutInterval = null;
+  const TIMEOUT_SUB = [
+    "Humans are worth the wait. Probably. We'll see.",
+    "Use this cooldown to reflect on whether you are, in fact, a person.",
+    "A real human would find this wait infuriating. Are you infuriated? Prove it.",
+    "Please remain carbon-based for the duration of the cooldown.",
+  ];
+
+  function fmtTime(s) {
+    const m = Math.floor(s / 60);
+    const ss = String(s % 60).padStart(2, "0");
+    return m + ":" + ss;
+  }
+
+  function maybeTimeout() {
+    // every 3 failed attempts, enforce a 60-second cooldown
+    if (fails > 0 && fails % 3 === 0) {
+      startTimeout(60);
+      return true;
+    }
+    return false;
+  }
+
+  function startTimeout(seconds) {
+    if (timeoutInterval) clearInterval(timeoutInterval);
+    let remaining = seconds;
+    const clock = $("timeout-clock");
+    const sub = $("timeout-sub");
+    if (sub) sub.textContent = pick(TIMEOUT_SUB);
+    if (clock) clock.textContent = fmtTime(remaining);
+    showStage("timeout");
+    timeoutInterval = setInterval(() => {
+      remaining--;
+      if (clock) clock.textContent = fmtTime(Math.max(remaining, 0));
+      if (remaining === 30 && sub) sub.textContent = "Halfway. A machine would wait patiently. Are you waiting patiently?";
+      if (remaining <= 0) {
+        clearInterval(timeoutInterval);
+        timeoutInterval = null;
+        hideFail();
+        showStage("challenge");
+        newChallenge();
+      }
+    }, 1000);
+  }
+
   // ---------- wiring ----------
 
   // Stage 0: the not-a-robot checkbox
@@ -410,6 +457,7 @@
       btn.textContent = "VERIFY";
       fails++;
       reportFail();
+      if (maybeTimeout()) return;
       if (maybeExistential()) return;
       showFail();
       newChallenge();
