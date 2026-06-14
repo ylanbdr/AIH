@@ -228,8 +228,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 90" width="100%">
   <defs>
     <filter id="t${seed}">
-      <feTurbulence type="fractalNoise" baseFrequency="0.022 0.055" numOctaves="2" seed="${seed}"/>
-      <feDisplacementMap in="SourceGraphic" scale="28"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.023 0.057" numOctaves="2" seed="${seed}"/>
+      <feDisplacementMap in="SourceGraphic" scale="31"/>
     </filter>
   </defs>
   <g filter="url(#t${seed})">
