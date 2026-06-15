@@ -383,7 +383,12 @@
     });
   }
 
-  // ---------- the 60-second lockout (after every 3 attempts) ----------
+  // ---------- the 30-second lockout (after every 3 attempts) ----------
+  // The unlock time lives in localStorage, so the cooldown survives a reload.
+  // Reloading mid-lockout adds a penalty — you cannot refresh your way out.
+  const LOCKOUT_KEY = "aih-lockout-until";
+  const LOCKOUT_SECONDS = 30;
+  const REFRESH_PENALTY = 15;
   let timeoutInterval = null;
   const TIMEOUT_SUB = [
     "Humans are worth the wait. Probably. We'll see.",
@@ -398,35 +403,69 @@
     return m + ":" + ss;
   }
 
+  function lockoutUntil() {
+    try { return Number(localStorage.getItem(LOCKOUT_KEY)) || 0; } catch (e) { return 0; }
+  }
+  function setLockoutUntil(ts) {
+    try { localStorage.setItem(LOCKOUT_KEY, String(ts)); } catch (e) {}
+  }
+  function clearLockout() {
+    try { localStorage.removeItem(LOCKOUT_KEY); } catch (e) {}
+  }
+
   function maybeTimeout() {
-    // every 3 failed attempts, enforce a 60-second cooldown
+    // every 3 failed attempts, enforce a cooldown
     if (fails > 0 && fails % 3 === 0) {
-      startTimeout(60);
+      setLockoutUntil(Date.now() + LOCKOUT_SECONDS * 1000);
+      const sub = $("timeout-sub");
+      if (sub) sub.textContent = pick(TIMEOUT_SUB);
+      showStage("timeout");
+      runLockoutCountdown();
       return true;
     }
     return false;
   }
 
-  function startTimeout(seconds) {
+  // If the page loads while a lockout is still active, the visitor either
+  // refreshed or came back early — either way, they're not escaping, and
+  // they pay a penalty for trying.
+  function resumePersistedLockout() {
+    if (lockoutUntil() > Date.now()) {
+      setLockoutUntil(lockoutUntil() + REFRESH_PENALTY * 1000);
+      const sub = $("timeout-sub");
+      if (sub) sub.textContent = "Reloading detected. That's cheating. +" + REFRESH_PENALTY + " seconds.";
+      showStage("timeout");
+      runLockoutCountdown();
+      return true;
+    }
+    clearLockout();
+    return false;
+  }
+
+  function runLockoutCountdown() {
     if (timeoutInterval) clearInterval(timeoutInterval);
-    let remaining = seconds;
     const clock = $("timeout-clock");
-    const sub = $("timeout-sub");
-    if (sub) sub.textContent = pick(TIMEOUT_SUB);
-    if (clock) clock.textContent = fmtTime(remaining);
-    showStage("timeout");
-    timeoutInterval = setInterval(() => {
-      remaining--;
-      if (clock) clock.textContent = fmtTime(Math.max(remaining, 0));
-      if (remaining === 30 && sub) sub.textContent = "Halfway. A machine would wait patiently. Are you waiting patiently?";
+    let halfwayShown = false;
+    const tick = () => {
+      const remaining = Math.ceil((lockoutUntil() - Date.now()) / 1000);
       if (remaining <= 0) {
         clearInterval(timeoutInterval);
         timeoutInterval = null;
+        clearLockout();
         hideFail();
         showStage("challenge");
         newChallenge();
+        return;
       }
-    }, 1000);
+      if (clock) clock.textContent = fmtTime(remaining);
+      if (!halfwayShown && remaining <= Math.ceil(LOCKOUT_SECONDS / 2)) {
+        halfwayShown = true;
+        const sub = $("timeout-sub");
+        if (sub) sub.textContent = "A machine would wait patiently. Are you waiting patiently?";
+      }
+    };
+    tick();
+    timeoutInterval = setInterval(tick, 1000);
   }
 
   // ---------- wiring ----------
@@ -518,5 +557,9 @@
       newChallenge();
     }, 4000);
   });
+
+  // On load: if a cooldown is still ticking from a previous visit, enforce it
+  // immediately (with a refresh penalty) instead of showing the gate.
+  resumePersistedLockout();
 
 })();
