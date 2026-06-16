@@ -233,6 +233,27 @@
         "Humanity verified on attempt #" + (myFails + 1) + ". We have questions.";
     })();
 
+    // test/dev mode: skip all scorekeeping writes (matches captcha.js)
+    const DEV = (function () {
+      try {
+        const p = new URLSearchParams(location.search);
+        if (p.has("dev")) {
+          const v = p.get("dev");
+          if (v === "0" || v === "off" || v === "false") { sessionStorage.removeItem("aih-dev"); return false; }
+          sessionStorage.setItem("aih-dev", "1");
+        }
+        return sessionStorage.getItem("aih-dev") === "1";
+      } catch (e) { return false; }
+    })();
+    if (DEV) {
+      const b = document.createElement("div");
+      b.textContent = "🧪 TEST MODE — score not recorded";
+      b.style.cssText = "position:fixed;bottom:10px;left:10px;z-index:9999;background:#202124;color:#fff;" +
+        "font:600 12px/1 'Segoe UI',Arial,sans-serif;padding:8px 12px;border-radius:20px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.3);opacity:.9;";
+      document.body.appendChild(b);
+    }
+
     // live scorekeeping (degrades gracefully when the API isn't around,
     // e.g. on the GitHub Pages mirror)
     const API_BASE = ""; // same origin
@@ -242,7 +263,7 @@
         let claimed = null;
         try { claimed = localStorage.getItem("aih-claimed"); } catch (e) {}
 
-        if (!claimed) {
+        if (!claimed && !DEV) {
           const res = await fetch(API_BASE + "/api/claim", { method: "POST" });
           if (res.ok) {
             count = (await res.json()).count;

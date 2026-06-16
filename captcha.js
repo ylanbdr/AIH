@@ -26,6 +26,33 @@
     "You opened developer tools. Inspecting a page with a machine is machine behavior — and machines don't need to pass the test.\n\nYour exit: human.html"
   );
 
+  // ---------- test / dev mode ----------
+  // Append ?dev to the URL (e.g. .../index.html?dev) to test freely:
+  // nothing is written to the leaderboard and the cooldown is skipped.
+  // It sticks for the browser tab; use ?dev=0 to turn it off.
+  const DEV = (function () {
+    try {
+      const p = new URLSearchParams(location.search);
+      if (p.has("dev")) {
+        const v = p.get("dev");
+        if (v === "0" || v === "off" || v === "false") { sessionStorage.removeItem("aih-dev"); return false; }
+        sessionStorage.setItem("aih-dev", "1");
+      }
+      return sessionStorage.getItem("aih-dev") === "1";
+    } catch (e) { return false; }
+  })();
+
+  function showDevBadge() {
+    if (!DEV || document.getElementById("dev-badge")) return;
+    const b = document.createElement("div");
+    b.id = "dev-badge";
+    b.textContent = "🧪 TEST MODE — score not recorded";
+    b.style.cssText = "position:fixed;bottom:10px;left:10px;z-index:9999;background:#202124;color:#fff;" +
+      "font:600 12px/1 'Segoe UI',Arial,sans-serif;padding:8px 12px;border-radius:20px;" +
+      "box-shadow:0 2px 8px rgba(0,0,0,.3);opacity:.9;";
+    document.body.appendChild(b);
+  }
+
   // ---------- state ----------
   let fails = 0;
   let currentChallenge = null;
@@ -48,6 +75,7 @@
   }
 
   function reportFail() {
+    if (DEV) return; // test mode: don't record anything
     // remember this browser's lifetime failure count, so the certificate
     // page can raise an eyebrow if they ever get there
     try {
@@ -414,6 +442,7 @@
   }
 
   function maybeTimeout() {
+    if (DEV) return false; // test mode: no waiting around
     // every 3 failed attempts, enforce a cooldown
     if (fails > 0 && fails % 3 === 0) {
       setLockoutUntil(Date.now() + LOCKOUT_SECONDS * 1000);
@@ -430,6 +459,7 @@
   // refreshed or came back early — either way, they're not escaping, and
   // they pay a penalty for trying.
   function resumePersistedLockout() {
+    if (DEV) { clearLockout(); return false; } // test mode: ignore any cooldown
     if (lockoutUntil() > Date.now()) {
       setLockoutUntil(lockoutUntil() + REFRESH_PENALTY * 1000);
       const sub = $("timeout-sub");
@@ -561,5 +591,8 @@
   // On load: if a cooldown is still ticking from a previous visit, enforce it
   // immediately (with a refresh penalty) instead of showing the gate.
   resumePersistedLockout();
+
+  // test-mode badge, if active
+  showDevBadge();
 
 })();
